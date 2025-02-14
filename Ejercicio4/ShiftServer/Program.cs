@@ -154,8 +154,6 @@ namespace ShiftServer
                         switch (username)
                         {
                             case "admin":
-                                //Voy por el segundo puto de la pagina 33
-
                                 isAdmin = true;
                                 if (adminPin == 0)//hacer tryparse
                                 {
@@ -193,71 +191,95 @@ namespace ShiftServer
                                 {
                                     isAdmin = false;
                                 }
-                                sw.WriteLine("Write the command");
-                                sw.Flush();
-                                command = sr.ReadLine();
 
-                                if (command != null)
+                                try
                                 {
-                                    realCommands = command.Split(' ');
-                                    switch (realCommands[0])
+                                    sw.WriteLine("Write the command");
+                                    sw.Flush();
+                                    command = sr.ReadLine();
+
+                                    if (command != null)
                                     {
-                                        case "list":
-                                            lock (l)
+                                        realCommands = command.Split(' ');
+                                    }
+                                }
+                                catch (IOException)
+                                {
+                                    bandera = false;
+                                }
+                                switch (realCommands[0])
+                                {
+                                    case "list":
+                                        lock (l)
+                                        {
+                                            if (waitQueue.Count > 0)
                                             {
-                                                if (waitQueue.Count > 0)
+                                                foreach (string user in waitQueue)
                                                 {
-                                                    foreach (string user in waitQueue)
-                                                    {
-                                                        sw.Write(user);
-                                                    }
+                                                    sw.Write(user);
+                                                    sw.Flush();
                                                 }
                                             }
-                                            break;
-                                        case "add":
-                                            lock (l)
+                                        }
+                                        sr.ReadLine();
+                                        break;
+                                    case "add":
+                                        lock (l)
+                                        {
+                                            if (waitQueue.Count <= 0)
                                             {
-                                                if (waitQueue.Count <= 0)
-                                                {
-                                                    waitQueue.Add(username);
-                                                }
-                                                else
+                                                waitQueue.Add(username);
+                                                sw.Write("Ok");
+                                                sw.Flush();
+                                            }
+                                            else
+                                            {
+                                                username = username + ";" + TimeZone.CurrentTimeZone;
+                                                lock (l)
                                                 {
 
-                                                    foreach (string user in waitQueue)
+                                                    string[] nombre = username.Split(';');
+                                                    if (!waitQueue.Contains(nombre[0]))
                                                     {
-                                                        string[] nombre = user.Split(';');
-                                                        if (!waitQueue.Contains(nombre[0]))
-                                                        {
-                                                            waitQueue.Add(user);
-                                                        }
-                                                        else
-                                                        {
-                                                            sw.WriteLine("The user is already in the queue");
-                                                            sw.Flush();
-                                                        }
+                                                        waitQueue.Add(username);
+                                                        sw.Write("Ok");
+                                                        sw.Flush();
                                                     }
+                                                    else
+                                                    {
+                                                        sw.WriteLine("The user is already in the queue");
+                                                        sw.Flush();
+                                                    }
+
                                                 }
                                             }
-                                            break;
-                                        case "del" when isAdmin:
-                                            break;
-                                        case "chpin" when isAdmin:
-                                            break;
-                                        case "exit" when isAdmin:
-                                            break;
-                                        case "shutdown" when isAdmin:
-                                            break;
-                                    }
+                                        }
+                                        sr.ReadLine();
+                                        break;
+                                    case "del" when isAdmin:
+                                        lock (l)
+                                        {
+
+                                        }
+
+                                        break;
+                                    case "chpin" when isAdmin:
+                                        break;
+                                    case "exit" when isAdmin:
+                                        break;
+                                    case "shutdown" when isAdmin:
+                                        break;
                                 }
                                 break;
                         }
 
                     }
                 }
-                client.Close();
 
             }
+            client.Close();
+
+
         }
     }
 }
