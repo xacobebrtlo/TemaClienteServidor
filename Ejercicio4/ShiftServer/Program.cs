@@ -118,7 +118,7 @@ namespace ShiftServer
             string command;
             string message;
             string username;
-            bool connected = true;
+
             bool bandera = true;
             int adminPin = 0;
             int pin;//pin devuelto por la funcion Readpin()
@@ -283,12 +283,52 @@ namespace ShiftServer
 
                                             break;
                                         case "chpin" when isAdmin:
+
+                                            try
+                                            {
+                                                lock (l)
+                                                {
+                                                    using (BinaryWriter bw = new BinaryWriter(new FileStream("pin.bin", FileMode.Create)))
+                                                    {
+                                                        if (adminPin >= 1000 && adminPin <= 9999)
+                                                        {
+                                                            bw.Write(adminPin);
+                                                            bw.Flush();
+                                                            sw.WriteLine("Pin guardado correctamente");
+                                                            sw.Flush();
+                                                        }
+                                                        else
+                                                        {
+                                                            sw.WriteLine("No se ha podido guardar el pin");
+                                                            sw.Flush();
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                            catch (ArgumentException) { }
+
                                             break;
                                         case "exit" when isAdmin:
                                             isAdmin = false;
 
                                             break;
                                         case "shutdown" when isAdmin:
+
+                                            lock (l)
+                                            {
+
+                                                using (StreamWriter stw = new StreamWriter("usuarios.txt"))
+                                                {
+                                                    foreach (string user in waitQueue)
+                                                    {
+
+                                                        stw.Write(user);
+                                                    }
+                                                }
+                                            }
+                                            isAdmin = false;
+                                            bandera = false;
+
 
                                             break;
                                     }
