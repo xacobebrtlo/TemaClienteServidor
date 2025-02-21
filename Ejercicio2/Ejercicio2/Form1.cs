@@ -2,10 +2,12 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
+using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Net.Sockets;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -47,13 +49,49 @@ namespace Ejercicio2
         {
             IP_SERVER = txbIp.Text;
             puerto = Convert.ToInt16(txbPuerto.Text);
+            string msg;
             IPAddress iPAddress;
 
             if (IPAddress.TryParse(IP_SERVER, out iPAddress))
             {
-                if ()
+                if (puerto < 0 || puerto > 65535)
                 {
+                    puerto++;
+                    textbox1.Text = $"El puerto es incorrecto, el nuevo puerto es{puerto}";
+                }
+                IPEndPoint ie = new IPEndPoint(iPAddress, puerto);
+                Socket server = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+                try
+                {
+                    server.Connect(ie);
+                }
+                catch (SocketException ex)
+                {
+                    textbox1.Text += $"Connection error: {ex.ToString()}";
+                }
 
+                IPEndPoint ieServer = (IPEndPoint)server.RemoteEndPoint;
+                textbox1.Text = $"Server on Ip: {ieServer.Address} at port{ieServer.Port}";
+
+                using (NetworkStream ns = new NetworkStream(server))
+                using (StreamReader sr = new StreamReader(ns))
+                using (StreamWriter sw = new StreamWriter(ns))
+                {
+                    try
+                    {
+                        msg = sr.ReadLine();
+                        textbox1.Text = msg;
+
+                        if (sender == btnAdd)
+                        {
+
+                        }
+
+                    }
+                    catch (IOException exc)
+                    {
+                        Debug.Write("IOException");
+                    }
                 }
             }
 

@@ -34,7 +34,7 @@
             this.txbPuerto = new System.Windows.Forms.TextBox();
             this.LblIp = new System.Windows.Forms.Label();
             this.lblPuerto = new System.Windows.Forms.Label();
-            this.textBox1 = new System.Windows.Forms.TextBox();
+            this.textbox1 = new System.Windows.Forms.TextBox();
             this.lblUser = new System.Windows.Forms.Label();
             this.txbUser = new System.Windows.Forms.TextBox();
             this.SuspendLayout();
@@ -91,14 +91,14 @@
             this.lblPuerto.TabIndex = 5;
             this.lblPuerto.Text = "Puerto";
             // 
-            // textBox1
+            // textbox1
             // 
-            this.textBox1.Location = new System.Drawing.Point(76, 196);
-            this.textBox1.Multiline = true;
-            this.textBox1.Name = "textBox1";
-            this.textBox1.ReadOnly = true;
-            this.textBox1.Size = new System.Drawing.Size(210, 106);
-            this.textBox1.TabIndex = 6;
+            this.textbox1.Location = new System.Drawing.Point(76, 196);
+            this.textbox1.Multiline = true;
+            this.textbox1.Name = "textbox1";
+            this.textbox1.ReadOnly = true;
+            this.textbox1.Size = new System.Drawing.Size(210, 106);
+            this.textbox1.TabIndex = 6;
             // 
             // lblUser
             // 
@@ -123,7 +123,7 @@
             this.ClientSize = new System.Drawing.Size(800, 450);
             this.Controls.Add(this.lblUser);
             this.Controls.Add(this.txbUser);
-            this.Controls.Add(this.textBox1);
+            this.Controls.Add(this.textbox1);
             this.Controls.Add(this.lblPuerto);
             this.Controls.Add(this.LblIp);
             this.Controls.Add(this.txbPuerto);
@@ -145,7 +145,7 @@
         private System.Windows.Forms.TextBox txbPuerto;
         private System.Windows.Forms.Label LblIp;
         private System.Windows.Forms.Label lblPuerto;
-        private System.Windows.Forms.TextBox textBox1;
+        private System.Windows.Forms.TextBox textbox1;
         private System.Windows.Forms.Label lblUser;
         private System.Windows.Forms.TextBox txbUser;
     }
