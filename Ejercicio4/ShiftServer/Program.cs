@@ -11,8 +11,9 @@ using System.Threading.Tasks;
 
 namespace ShiftServer
 {
-    internal class Program
-    {
+    internal class Program    //Comprobación archivos. Cerrar servidor. Cierre abrupto en admin realcommand. guardar cola wait en otro archivo (distinto users). Comporbación rango al eliminar.
+    {// Revisión de introd. de pin, revisar chpin (admite no meter nada), solo 4 digitos.
+
         static void Main(string[] args)
         {
             Program program = new Program();
@@ -23,12 +24,19 @@ namespace ShiftServer
         private static readonly object l = new object();
         public void ReadName(string archivo)
         {
-            using (StreamReader sr = new StreamReader(archivo))
+            try
             {
-                string usuarios = sr.ReadToEnd();
-                users = usuarios.Split(';');
-                Array.ForEach(users, (u) => u.Trim());
+
+                using (StreamReader sr = new StreamReader(archivo))
+                {
+                    string usuarios = sr.ReadToEnd();
+                    users = usuarios.Split(';');
+                    Array.ForEach(users, (u) => u.Trim());
+                }
             }
+            catch (ArgumentException) { }
+            catch (IOException) { }
+
 
         }
         public int ReadPin(string archivo)
@@ -49,6 +57,10 @@ namespace ShiftServer
                 }
             }
             catch (ArgumentException)
+            {
+                return -1;
+            }
+            catch (IOException)
             {
                 return -1;
             }
@@ -92,7 +104,28 @@ namespace ShiftServer
 
                     }
                 }
+                try
+                {
 
+                    //Añadir archivo de waitQeue a lista de waitQeue
+                    Directory.SetCurrentDirectory(Environment.GetEnvironmentVariable("userprofile"));
+                    lock (l)
+                    {
+
+                        if (File.Exists("WaitQeue.txt"))
+                        {
+                            using (StreamReader sr = new StreamReader("WaitQeue.txt"))
+                            {
+                                string usuarios = sr.ReadToEnd();
+                                if (usuarios != null)
+                                {
+                                    waitQueue.Add(usuarios);
+                                }
+                            }
+                        }
+                    }
+                }
+                catch (IOException) { }
                 while (flag)
                 {
                     try
@@ -101,15 +134,20 @@ namespace ShiftServer
                         Thread hilo = new Thread(clientThread);
                         hilo.IsBackground = true;
                         hilo.Start(cliente);
+
+
                     }
                     catch (SocketException e)
                     {
                         flag = false;
                     }
+
                 }
 
-            }
 
+
+
+            }
         }
 
         public void clientThread(object socket)
@@ -143,7 +181,7 @@ namespace ShiftServer
 
                     if (username != null)
                     {
-                        lock (l)
+                        // lock (l)
                         {
                             if (!users.Contains(username) && username != "admin")
                             {
@@ -167,7 +205,10 @@ namespace ShiftServer
                                     {
                                         sw.WriteLine("Write the pin");
                                         sw.Flush();
-                                        adminPin = Convert.ToInt32(sr.ReadLine());
+                                        int.TryParse(sr.ReadLine(), out adminPin);
+
+
+
                                     }
                                     Directory.SetCurrentDirectory(Environment.GetEnvironmentVariable("userprofile"));
 
@@ -215,122 +256,138 @@ namespace ShiftServer
                                     {
                                         bandera = false;
                                     }
-                                    switch (realCommands[0])
+                                    if (realCommands.Length >= 1)
                                     {
-                                        case "list":
-                                            lock (l)
-                                            {
-                                                if (waitQueue.Count > 0)
+
+                                        switch (realCommands[0])
+                                        {
+                                            case "list":
+                                                lock (l)
                                                 {
-                                                    foreach (string user in waitQueue)
+                                                    if (waitQueue.Count > 0)
                                                     {
-                                                        sw.Write(user);
+                                                        foreach (string user in waitQueue)
+                                                        {
+                                                            sw.Write(user);
+                                                            sw.Flush();
+                                                        }
+                                                    }
+                                                }
+                                                if (username != "admin")
+                                                {
+                                                    sr.ReadLine();
+                                                }
+                                                break;
+                                            case "add":
+                                                lock (l)
+                                                {
+                                                    username = username + ";" + System.DateTime.Now + "\t";
+                                                    if (waitQueue.Count <= 0)
+                                                    {
+                                                        waitQueue.Add(username);
+                                                        sw.Write("Ok");
+                                                        sw.Flush();
+                                                    }
+                                                    else
+                                                    {
+                                                        //  lock (l)
+                                                        {
+
+                                                            string[] nombre = username.Split(';');
+                                                            if (!waitQueue.Contains(nombre[0]))
+                                                            {
+                                                                waitQueue.Add(username);
+                                                                sw.Write("Ok");
+                                                                sw.Flush();
+                                                            }
+                                                            else
+                                                            {
+                                                                sw.WriteLine("The user is already in the queue");
+                                                                sw.Flush();
+                                                            }
+
+                                                        }
+                                                    }
+                                                }
+                                                sr.ReadLine();
+                                                break;
+                                            case "del" when isAdmin:
+                                                lock (l)
+                                                {
+                                                    if (realCommands.Length > 1)
+                                                    {
+                                                        if (waitQueue.Contains(realCommands[1]))
+                                                        {
+                                                            waitQueue.RemoveAt(Convert.ToInt32(realCommands[1]));
+
+                                                        }
+                                                        else
+                                                        {
+                                                            sw.WriteLine("delete error");
+                                                            sw.Flush();
+                                                        }
+                                                    }
+                                                    else
+                                                    {
+                                                        sw.WriteLine("delete error");
                                                         sw.Flush();
                                                     }
                                                 }
-                                            }
-                                            if (username != "admin")
-                                            {
-                                                sr.ReadLine();
-                                            }
-                                            break;
-                                        case "add":
-                                            lock (l)
-                                            {
-                                                username = username + ";" + System.DateTime.Now + "\t";
-                                                if (waitQueue.Count <= 0)
-                                                {
-                                                    waitQueue.Add(username);
-                                                    sw.Write("Ok");
-                                                    sw.Flush();
-                                                }
-                                                else
+
+                                                break;
+                                            case "chpin" when isAdmin:
+
+                                                try
                                                 {
                                                     lock (l)
                                                     {
-
-                                                        string[] nombre = username.Split(';');
-                                                        if (!waitQueue.Contains(nombre[0]))
+                                                        using (BinaryWriter bw = new BinaryWriter(new FileStream("pin.bin", FileMode.Create)))
                                                         {
-                                                            waitQueue.Add(username);
-                                                            sw.Write("Ok");
-                                                            sw.Flush();
+                                                            int nuevoPin;
+                                                            int.TryParse(realCommands[1], out nuevoPin);
+                                                            if (nuevoPin >= 1000 && nuevoPin <= 9999)
+                                                            {
+                                                                bw.Write(nuevoPin);
+                                                                bw.Flush();
+                                                                sw.WriteLine("Pin guardado correctamente");
+                                                                sw.Flush();
+                                                            }
+                                                            else
+                                                            {
+                                                                sw.WriteLine("No se ha podido guardar el pin");
+                                                                sw.Flush();
+                                                            }
                                                         }
-                                                        else
-                                                        {
-                                                            sw.WriteLine("The user is already in the queue");
-                                                            sw.Flush();
-                                                        }
-
                                                     }
                                                 }
-                                            }
-                                            sr.ReadLine();
-                                            break;
-                                        case "del" when isAdmin:
-                                            lock (l)
-                                            {
-                                                if (realCommands.Length > 1)
-                                                {
-                                                    waitQueue.RemoveAt(Convert.ToInt32(realCommands[1]));
-                                                }
-                                                else
-                                                {
-                                                    sw.WriteLine("delete error");
-                                                    sw.Flush();
-                                                }
-                                            }
+                                                catch (ArgumentException) { }
 
-                                            break;
-                                        case "chpin" when isAdmin:
+                                                break;
+                                            case "exit" when isAdmin:
+                                                isAdmin = false;
 
-                                            try
-                                            {
+                                                break;
+                                            case "shutdown" when isAdmin:
+
                                                 lock (l)
                                                 {
-                                                    using (BinaryWriter bw = new BinaryWriter(new FileStream("pin.bin", FileMode.Create)))
+
+                                                    using (StreamWriter stw = new StreamWriter("WaitQeue.txt"))
                                                     {
-                                                        if (adminPin >= 1000 && adminPin <= 9999)
+                                                        foreach (string user in waitQueue)
                                                         {
-                                                            bw.Write(adminPin);
-                                                            bw.Flush();
-                                                            sw.WriteLine("Pin guardado correctamente");
-                                                            sw.Flush();
-                                                        }
-                                                        else
-                                                        {
-                                                            sw.WriteLine("No se ha podido guardar el pin");
-                                                            sw.Flush();
+
+                                                            stw.Write(user);
                                                         }
                                                     }
                                                 }
-                                            }
-                                            catch (ArgumentException) { }
-
-                                            break;
-                                        case "exit" when isAdmin:
-                                            isAdmin = false;
-
-                                            break;
-                                        case "shutdown" when isAdmin:
-
-                                            lock (l)
-                                            {
-
-                                                using (StreamWriter stw = new StreamWriter("usuarios.txt"))
-                                                {
-                                                    foreach (string user in waitQueue)
-                                                    {
-
-                                                        stw.Write(user);
-                                                    }
-                                                }
-                                            }
-                                            isAdmin = false;
-                                            bandera = false;
+                                                isAdmin = false;
+                                                bandera = false;
+                                                s.Close();
 
 
-                                            break;
+                                                break;
+                                        }
                                     }
                                     break;
                             }

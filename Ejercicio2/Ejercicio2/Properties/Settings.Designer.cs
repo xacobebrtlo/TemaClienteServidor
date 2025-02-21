@@ -8,7 +8,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace FormPruebaComponentes.Properties
+namespace Ejercicio2.Properties
 {
 
 
