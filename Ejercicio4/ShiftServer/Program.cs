@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 
 namespace ShiftServer
 {
-    internal class Program    //Comprobación archivos. Cerrar servidor. Cierre abrupto en admin realcommand. guardar cola wait en otro archivo (distinto users). Comporbación rango al eliminar.
+    internal class Program    //     Comporbación rango al eliminar (no elimina).
     {// Revisión de introd. de pin, revisar chpin (admite no meter nada), solo 4 digitos.
 
         static void Main(string[] args)
