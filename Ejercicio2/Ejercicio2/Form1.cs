@@ -84,14 +84,37 @@ namespace Ejercicio2
 
                         if (sender == btnAdd)
                         {
-
+                            sw.Write("add");
                         }
-
+                        if (sender == btnList)
+                        {
+                            sw.Write("list");
+                        }
+                        sw.Flush();
                     }
                     catch (IOException exc)
                     {
                         Debug.Write("IOException");
                     }
+                }
+            }
+
+            Directory.SetCurrentDirectory(Environment.GetEnvironmentVariable("userprofile"));
+            if (File.Exists("Datos.txt"))
+            {
+                FileInfo f = new FileInfo("Datos.txt");
+
+                if (f != null)
+                {
+                    lock (l)
+                    {
+                        using (StreamWriter sw = new StreamWriter("Datos.txt"))
+                        {
+                            sw.WriteLine($"{txbIp.Text};{txbPuerto.Text};{txbUser.Text}");
+                            sw.Flush();
+                        }
+                    }
+
                 }
             }
 
